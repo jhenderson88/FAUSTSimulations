@@ -11,6 +11,8 @@
 #include <tgmath.h>
 #include "G4IonTable.hh"
 
+#include "TLorentzVector.h"
+
 #include "CalcVertex.hh"
 
 #ifndef PI
@@ -29,34 +31,23 @@ class Kinematics {
 
 	public:
 		Kinematics()	{;}
-		Kinematics(double bA, double bZ, double tA, double tZ, double A, double Z, bool eject = true)	{
+		Kinematics(int bA, int bZ, int tA, int tZ, int A, int Z, double Ex = 0, bool eject = true)	{
+			fEx		= Ex;
 			f_beamA		= bA;
 			f_beamZ		= bZ;
 			f_targetA	= tA;
 			f_targetZ	= tZ;
-//			f_beamM		= mass[beamZ][beamA];
-//			f_targetM	= mass[targetZ][targetA];
-			f_beamM		= f_beamA;
-			f_targetM	= f_targetA;
 			if(eject){
 				f_ejecA	= A;
 				f_ejecZ	= Z;		
 				f_recoilA	= f_beamA + f_targetA - f_ejecA;
 				f_recoilZ	= f_beamZ + f_targetZ - f_ejecZ;
-				f_ejecM		= f_ejecA;
-				f_recoilM	= f_recoilA;
-//				f_ejecM		= mass[f_ejecZ][f_ejecA];
-//				f_recoilM	= mass[f_recoilZ][f_recoilA];
 			}
 			else{
 				f_recoilA	= A;
 				f_recoilZ	= Z;		
 				f_ejecA		= f_beamA + f_targetA - f_ejecA;
 				f_ejecZ		= f_beamZ + f_targetZ - f_ejecZ;
-				f_ejecM		= f_ejecA;
-				f_recoilM	= f_recoilA;
-//				f_ejecM		= mass[f_ejecZ][f_ejecA];
-//				f_recoilM	= mass[recoilZ][recoilA];
 
 			}	
 		};
@@ -66,11 +57,11 @@ class Kinematics {
 		Kinematics& operator = (const Kinematics&);
 
 		void	SetReactionEnergy(double e){ 
-			f_KE 	= e;	
-			f_Ecm	= e * (f_targetM / (f_targetM + f_beamM));
+			f_KE 	= e;
+			CalculateKinematics();
 		}
 
-		void	CalculateKinematics(double Ex=0);
+		void	CalculateKinematics();
 
 		CalcVertex	CreateVertex(double tCm);
 
@@ -86,21 +77,21 @@ class Kinematics {
 
 		}
 
+		double	Reconstruct(double,double);
+		
+		
+
 	private:
 			
-		double	f_beamA;
-		double	f_beamZ;
-		double	f_targetA;
-		double	f_targetZ;
-		double	f_beamM;
-		double	f_targetM;
+		int	f_beamA;
+		int	f_beamZ;
+		int	f_targetA;
+		int	f_targetZ;
 
-		double	f_ejecA;
-		double	f_ejecZ;
-		double	f_recoilA;
-		double	f_recoilZ;
-		double	f_recoilM;
-		double	f_ejecM;
+		int	f_ejecA;
+		int	f_ejecZ;
+		int	f_recoilA;
+		int	f_recoilZ;
 
 		double	f_KE;
 		double	f_Ecm;
@@ -133,7 +124,31 @@ class Kinematics {
 		double fVLab[2];
 		double fGLab[2];
 		double fThetaMax[4]; // only nonzero for ejectile and recoil
-		
+
+		double	fEx;		
+
+		TLorentzVector	fLab_1;
+		TLorentzVector	fLab_2;
+		TLorentzVector	fLab_3;
+		TLorentzVector	fLab_4;
+
+		TLorentzVector	fCM_1;
+		TLorentzVector	fCM_2;
+		TLorentzVector	fCM_3;
+		TLorentzVector	fCM_4;
+
+		TLorentzVector	totalEnergyCM;
+		TLorentzVector	totalEnergyLab;
+
+		TVector3	fLabVec_1;
+		TVector3	fLabVec_2;
+		TVector3	fLabVec_3;
+		TVector3	fLabVec_4;
+
+		TVector3	fCMVec_1;
+		TVector3	fCMVec_2;
+		TVector3	fCMVec_3;
+		TVector3	fCMVec_4;
 
 };
 

@@ -22,6 +22,7 @@ class ActionInitialization : public G4VUserActionInitialization {
 	private:
 		DetectorConstruction*	fDetector;
 		HistoManager*		fHistograms;
+		AngularDistribution*	fDist;
 
 }; 
 

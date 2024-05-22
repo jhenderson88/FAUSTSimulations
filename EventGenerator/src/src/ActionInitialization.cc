@@ -2,7 +2,7 @@
 
 
 ActionInitialization::ActionInitialization(DetectorConstruction* detector, HistoManager *hist)
-	:	G4VUserActionInitialization(), fDetector(detector), fHistograms(hist)	
+	:	G4VUserActionInitialization(), fDetector(detector), fHistograms(hist)
 {
 }
 
@@ -13,7 +13,6 @@ ActionInitialization::~ActionInitialization()
 void ActionInitialization::BuildForMaster() const
 {
 
-	fHistograms->Book();	
 	RunAction* runAction = new RunAction(fHistograms);
 	SetUserAction(runAction);
 
@@ -21,12 +20,12 @@ void ActionInitialization::BuildForMaster() const
 
 void ActionInitialization::Build() const
 {
-
-	PrimaryGeneratorAction *pGen = new PrimaryGeneratorAction();
-	SetUserAction(pGen);
 	
 	RunAction* runAction = new RunAction(fHistograms);
 	SetUserAction(runAction);
+
+	PrimaryGeneratorAction *pGen = new PrimaryGeneratorAction();
+	SetUserAction(pGen);
 
 	EventAction* eventAction = new EventAction(runAction,fHistograms);
 	SetUserAction(eventAction);

@@ -2,12 +2,6 @@
 # in interactive session
 #
 # Set some default verbose
-/Histograms/SetFilename Neutron_Shell.root
-#/DetectorConstruction/Radius 15 cm
-#/DetectorConstruction/Thickness 7.5 cm
-/DetectorConstruction/SetMaterial CLYC
-/control/verbose 2
-/control/saveHistory
 #/run/verbose 2
 #
 # Change the default number of threads (in multi-threaded mode)

@@ -32,11 +32,13 @@
 #define RunAction_h 1
 
 #include "G4UserRunAction.hh"
+#include "RunActionMessenger.hh"
 //#include "G4Accumulable.hh"
 #include "globals.hh"
 
 class G4Run;
 class HistoManager;
+class RunActionMessenger;
 
 /// Run action class
 ///
@@ -51,14 +53,17 @@ class RunAction : public G4UserRunAction
 		virtual ~RunAction();
 
 		// virtual G4Run* GenerateRun();
-		virtual void BeginOfRunAction(const G4Run*);
-		virtual void   EndOfRunAction(const G4Run*);
+		virtual void 	BeginOfRunAction(const G4Run*);
+		virtual void   	EndOfRunAction(const G4Run*);
 
-		int	GetNevents()	{ return nbEventInRun;	}
+		int		GetNevents()		{ return nbEventInRun;	}
 
 	private:
-		HistoManager* fHistoManager;
-		int	nbEventInRun; 
+		HistoManager	*fHistoManager;
+		int		nbEventInRun;
+
+		RunActionMessenger	*messenger;
+
 };
 
 #endif

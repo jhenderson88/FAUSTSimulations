@@ -31,14 +31,28 @@
 #ifndef PrimaryGeneratorAction_h
 #define PrimaryGeneratorAction_h 1
 
+#include "AngularDistribution.hh"
 #include "PrimaryGeneratorMessenger.hh"
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "G4ParticleGun.hh"
 #include "G4GeneralParticleSource.hh"
+#include "G4Threading.hh"
 #include "globals.hh"
 #include "CalcVertex.hh"
 #include "Kinematics.hh"
 #include <chrono>
+
+#ifndef PI
+#define PI (3.14159265358979)
+#endif
+
+#ifndef R2D
+#define R2D (5.72957795130823229e+01)
+#endif
+
+#ifndef D2R
+#define D2R (1.74532925199432955e-02)
+#endif 
 
 class G4ParticleGun;
 class G4GeneralParticleSource;
@@ -51,6 +65,8 @@ class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 	public:
 		PrimaryGeneratorAction();    
 		virtual ~PrimaryGeneratorAction();
+		PrimaryGeneratorAction(const PrimaryGeneratorAction& );
+		PrimaryGeneratorAction& operator = (const PrimaryGeneratorAction&);
 
 		PrimaryGeneratorMessenger	*messenger;
 
@@ -70,6 +86,9 @@ class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 		double	GetParticlePhi()	const	{
 			return 	ePhi;
 		}
+		double	GetCmTheta()		const	{
+			return	tCm;
+		}
 
 		void	SetBeamSpotSize(double bs)	{ beamSpotSize		= bs;	}
 		void	SetBeamEnergy(double e)		{ beamEnergy		= e;	}
@@ -82,7 +101,7 @@ class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 		void	SetEjectileA(int a)		{ ejectileA		= a;	}
 		void	SetEjectileZ(int z)		{ ejectileZ		= z;	}
 
-		void	SetExcitationEnergy(int e)	{ ExcE			= e;	}
+		void	SetExcitationEnergy(double e)	{ ExcE			= e;	}
 
 	private:
 		G4ParticleGun*  		fParticleGun; // pointer a to G4 gun class
@@ -97,6 +116,8 @@ class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 		double	eTheta;
 		double	ePhi;
 
+		double	tCm;
+
 		double	beamSpotSize;
 		double	beamEnergy;
 		double	beamEnergyLoss;
@@ -109,6 +130,10 @@ class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 		int	targetZ;
 		int	ejectileA;
 		int	ejectileZ;
+
+		G4bool		bDist;
+
+		AngularDistribution	*fDist;
 
 };
 

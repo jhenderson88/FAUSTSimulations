@@ -28,6 +28,7 @@
 /// \file exampleHe3Barrel.cc
 /// \brief Main program of the He3Barrel example
 
+#include "AngularDistribution.hh"
 #include "RunAction.hh"
 #include "EventAction.hh"
 #include "SteppingAction.hh"
@@ -83,11 +84,11 @@ int main(int argc,char** argv)
 		std::cout	<< "Multithreading!"
 				<< std::endl;
 	 	G4MTRunManager* runManager = new G4MTRunManager;
-		runManager->SetNumberOfThreads(50);
+		runManager->SetNumberOfThreads(1);
 	#else
-      		std::cout	<< "Single thread"
-      				<< std::endl;
-	      	G4RunManager* runManager = new G4RunManager;
+    		std::cout	<< "Single thread"
+    				<< std::endl;
+            	G4RunManager* runManager = new G4RunManager;
 	#endif
 
 	// Set mandatory initialization classes
@@ -108,6 +109,7 @@ int main(int argc,char** argv)
 	HistoManager* histo = 
 		new HistoManager();
 	new HistoMessenger(histo);
+	histo->Book();
 
 	runManager->SetUserInitialization(thePL);
 	runManager->SetUserInitialization(new ActionInitialization(detector,histo));

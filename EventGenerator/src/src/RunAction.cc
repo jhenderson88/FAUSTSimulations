@@ -45,7 +45,9 @@
 RunAction::RunAction(HistoManager *histo)
 : G4UserRunAction(),
   fHistoManager(histo)
-{ 
+{
+
+	messenger	= new RunActionMessenger(this);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -62,8 +64,6 @@ void RunAction::BeginOfRunAction(const G4Run* theRun)
 
   	// inform the runManager to save random number seed
   	G4RunManager::GetRunManager()->SetRandomNumberStore(false);
-	//fHistoManager->Book();
-	//std::ofstream outfile("out.txt",std::ofstream::out | std::ofstream::app);
 
 }
 

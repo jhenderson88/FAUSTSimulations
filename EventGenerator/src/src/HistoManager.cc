@@ -81,6 +81,7 @@ void HistoManager::Book()
   	fTree->Branch("PrimE", &f_PrimE);
   	fTree->Branch("PrimT", &f_PrimT);
   	fTree->Branch("PrimP", &f_PrimP);
+	fTree->Branch("ThetaCM", &f_tCm);
 	fTree->Branch("Etot", &f_Etot);
 	fTree->Branch("Edep", &f_Edep);
   	fTree->Branch("EdepP", &f_EdepP);
@@ -111,7 +112,7 @@ void HistoManager::Save()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void HistoManager::FillTree(G4double primE, G4double primT, G4double primP,
+void HistoManager::FillTree(G4double primE, G4double primT, G4double primP, G4double tCm,
 			std::vector<DetectorHit> hits)
 {                
 
@@ -123,6 +124,7 @@ void HistoManager::FillTree(G4double primE, G4double primT, G4double primP,
 		f_PrimE = primE;
 		f_PrimT = primT;
 		f_PrimP = primP;
+		f_tCm	= tCm;
 		for(size_t i=0;i<hits.size();i++){
 			f_Edep.push_back(hits.at(i).GetEDep());
 			f_EdepP.push_back(hits.at(i).GetEDepP());
@@ -140,14 +142,15 @@ void HistoManager::FillTree(G4double primE, G4double primT, G4double primP,
 		if(f_Edep.size() == 0)
 			return;
 
-		if (fTree) 
-			fTree->Fill();
+		if (fTree){ 
+			fTree->Fill();	
+		}
 		Clear();
 	}
 
 }  
 
-void HistoManager::FillTree(G4double primE, G4double primT, G4double primP){
+void HistoManager::FillTree(G4double primE, G4double primT, G4double primP, G4double tCm){
 
 	{
 		G4AutoLock l(&writemutex);
@@ -155,8 +158,10 @@ void HistoManager::FillTree(G4double primE, G4double primT, G4double primP){
 		f_PrimE = primE;
 		f_PrimT = primT;
 		f_PrimP = primP;
-		if(fTree)
-			fTree->Fill();
+		f_tCm	= tCm;
+		if(fTree){
+			fTree->Fill();	
+		}
 		Clear();
 	}
 }
@@ -168,6 +173,7 @@ void HistoManager::Clear(){
 	f_PrimE = 0;
 	f_PrimT = 0;
 	f_PrimP = 0;
+	f_tCm	= 0;
 	f_Etot	= 0;
 	f_ToF.clear();
 	f_detID.clear();

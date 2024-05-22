@@ -23,65 +23,51 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-/// \file analysis/AnaEx01/include/HistoManager.hh
-/// \brief Definition of the HistoManager class
-//
-//
-// $Id: HistoManager.hh 99607 2016-09-28 13:33:42Z gcosmo $
-// 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo...... 
 
-#ifndef HistoManager_h
-#define HistoManager_h 1
+#ifndef AngularDistribution_h
+#define AngularDistribution_h 1
 
-#include "G4ThreeVector.hh"
-#include "DetectorHit.hh"
-#include <vector>
+#include "G4RunManager.hh"
+#include "AngularDistributionMessenger.hh"
+#include <fstream>
+#include <iostream>
+#include <iomanip>
+#include "TGraph.h"
+#include "TH1F.h"
 #include "globals.hh"
 
-class TFile;
-class TTree;
+#ifndef PI
+#define PI (3.14159265358979)
+#endif
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+#ifndef R2D
+#define R2D (5.72957795130823229e+01)
+#endif
 
-class HistoManager
-{
+#ifndef D2R
+#define D2R (1.74532925199432955e-02)
+#endif 
+
+class AngularDistributionMessenger;
+
+class AngularDistribution {
 	public:
-		HistoManager();
-		~HistoManager();     
+		AngularDistribution();    
+		virtual ~AngularDistribution();
+		AngularDistribution(const AngularDistribution& );
+		AngularDistribution& operator = (const AngularDistribution&);
 
-		void 	FillTree(G4double, G4double, G4double, G4double, std::vector<DetectorHit>);
-		void	FillTree(G4double, G4double, G4double, G4double);
+		void	ReadAngularDistribution(G4String);
 
-		void	SetFilename(G4String str)	{ fFilename = str; }
-
-		void 	Book();
-		void 	Save(); 
-
-		void	Clear();
+		TH1F	*GetDistributionHistogram()	{ return hDist;	}
+		G4bool	GoodDist() const		{ return bDist; }
 
 	private:
-		TFile*   	fRootFile;          
-		TTree*   	fTree;   
+		TGraph	*gDist;
+		TH1F	*hDist;
+		G4bool	bDist;
 
-		std::vector<double> 	f_Edep;
-		std::vector<double> 	f_EdepP;
-		double 		f_PrimE;
-		double		f_PrimT;
-		double		f_PrimP;
-		double		f_Etot;
-		double		f_tCm;
-		std::vector<double>	f_ToF;
-		std::vector<double>	f_Theta;
-		std::vector<int>	f_detID;
-		std::vector<double>	f_X;
-		std::vector<double>	f_Y;
-		std::vector<double>	f_Z;
-		std::vector<double>	f_R;
-		std::vector<bool>	f_detHit;
-
-		G4String	fFilename;
+		AngularDistributionMessenger	*messenger;
 
 };
 

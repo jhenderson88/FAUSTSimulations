@@ -78,22 +78,24 @@ void EventAction::EndOfEventAction(const G4Event* e)
 	G4double particleEnergy = 0.;
 	G4double particleTheta = 0.;
 	G4double particlePhi = 0.;
+	G4double tCm = 0.;
 	G4ThreeVector particlevec;
 	if (generatorAction)
 	{
 		particleEnergy 	= generatorAction->GetParticleEnergy() * MeV;
 		particleTheta	= generatorAction->GetParticleTheta();
 		particlePhi	= generatorAction->GetParticlePhi();
+		tCm		= generatorAction->GetCmTheta();
 	}
 	
 	if(e->GetEventID() % 10000 == 0)
 		std::cout	<< "Event " << e->GetEventID() << " of " << fRunAction->GetNevents() << "\r" << std::flush;
 
 	if(fHits.size() == 0){
-		fHistoManager->FillTree(particleEnergy,particleTheta,particlePhi);
+		fHistoManager->FillTree(particleEnergy,particleTheta,particlePhi,tCm);
 		return;
 	}
-	fHistoManager->FillTree(particleEnergy,particleTheta,particlePhi,fHits);
+	fHistoManager->FillTree(particleEnergy,particleTheta,particlePhi,tCm,fHits);
 
 }
 

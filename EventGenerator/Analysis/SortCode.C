@@ -1,4 +1,89 @@
-#include "Kinematics.hh"
+#define SortCode_cxx
+#include "SortCode.h"
+#include <TH2.h>
+#include <TStyle.h>
+#include <TCanvas.h>
+
+void SortCode::Loop(const char *outfilename)
+{
+	//   In a ROOT session, you can do:
+	//      root> .L SortCode.C
+	//      root> SortCode t
+	//      root> t.GetEntry(12); // Fill t data members with entry number 12
+	//      root> t.Show();       // Show values of entry 12
+	//      root> t.Show(16);     // Read and show values of entry 16
+	//      root> t.Loop();       // Loop on all entries
+	//
+
+	//     This is the loop skeleton where:
+	//    jentry is the global entry number in the chain
+	//    ientry is the entry number in the current Tree
+	//  Note that the argument to GetEntry must be:
+	//    jentry for TChain::GetEntry
+	//    ientry for TTree::GetEntry and TBranch::GetEntry
+	//
+	//       To read only selected branches, Insert statements like:
+	// METHOD1:
+	//    fChain->SetBranchStatus("*",0);  // disable all branches
+	//    fChain->SetBranchStatus("branchname",1);  // activate branchname
+	// METHOD2: replace line
+	//    fChain->GetEntry(jentry);       //read all branches
+	//by  b_branchname->GetEntry(ientry); //read only this branch
+	if (fChain == 0) return;
+
+	Long64_t nentries = fChain->GetEntriesFast();
+
+	TFile	*outfile = new TFile(outfilename,"RECREATE");
+	TH2F	*hE_Theta = new TH2F("E_Theta","E_Theta",1800,0,180,4196,0,256);
+	TH2F	*hpE_pTheta = new TH2F("pE_Theta","pE_Theta",1800,0,180,4196,0,256);
+
+	TH2F	*hExc_Theta = new TH2F("Exc_Theta","Exc_Theta",180,0,180,8192,0,64);
+
+	Kinematics	*kin = new Kinematics(21,10,2,1,1,1,0);
+	kin->SetReactionEnergy(1000.);
+
+	std::cout	<< "Begin sort of "
+			<< nentries
+			<< " events"
+			<< std::endl;
+
+	Long64_t nbytes = 0, nb = 0;
+	for (Long64_t jentry=0; jentry<nentries;jentry++) {
+		Long64_t ientry = LoadTree(jentry);
+		if (ientry < 0) 
+			break;
+		nb = fChain->GetEntry(jentry);   nbytes += nb;
+		// if (Cut(ientry) < 0) continue;
+		//
+	
+		double	Energy = 0;
+		double	theta = -1;
+		for(size_t i=0;i<Edep->size();i++){
+			Energy += Edep->at(i); 
+			if(DetID->at(i) == 1)
+				theta = Theta->at(i); 
+		}
+		hpE_pTheta->Fill(PrimT * TMath::RadToDeg(),PrimE);
+		hE_Theta->Fill(theta * TMath::RadToDeg(),Energy);
+
+		if(theta > 0){
+			double	excE	= kin->Reconstruct(PrimE,PrimT); 
+
+			hExc_Theta->Fill(theta * TMath::RadToDeg(), excE);
+		}
+
+		if(jentry%100000 == 0)
+                	std::cout << std::setiosflags(std::ios::fixed) << "Entry " << jentry << " of " << nentries << ", " << 100 * (double)jentry/((double)nentries) << "% complete" << "\r" << std::flush;
+	}
+	std::cout << "Entry " << nentries << " of " << nentries << ", 100.00% complete" << std::endl; 
+	outfile->cd();
+	hE_Theta->Write();
+	hpE_pTheta->Write();
+	hExc_Theta->Write();
+	outfile->Write();
+	outfile->Close();
+}
+
 
 Kinematics::Kinematics(const Kinematics& v){
 			
@@ -13,6 +98,7 @@ Kinematics::Kinematics(const Kinematics& v){
 	f_recoilZ	= v.f_recoilZ;
 
 	fEx		= v.fEx;
+
 	f_KE		= v.f_KE;
 	f_Ecm		= v.f_Ecm;
 
@@ -75,7 +161,7 @@ Kinematics::Kinematics(const Kinematics& v){
 	fThetaMax[0]		= v.fThetaMax[0]; 
 	fThetaMax[1]		= v.fThetaMax[1]; 
 	fThetaMax[2]		= v.fThetaMax[2]; 
-	fThetaMax[3]		= v.fThetaMax[3];
+	fThetaMax[3]		= v.fThetaMax[3]; 
 
 	fLab_1		= v.fLab_1;
 	fLab_2         	= v.fLab_2;
@@ -114,6 +200,7 @@ Kinematics& Kinematics::operator = (const Kinematics& v){
 	f_recoilZ	= v.f_recoilZ;
 
 	fEx		= v.fEx;
+
 	f_KE		= v.f_KE;
 	f_Ecm		= v.f_Ecm;
 
@@ -207,18 +294,11 @@ Kinematics& Kinematics::operator = (const Kinematics& v){
 
 void Kinematics::CalculateKinematics(){
 
-	std::cout	<< G4IonTable::GetIonTable()->GetIon(f_beamZ,f_beamA,0)->GetPDGMass() << std::endl;
-	std::cout	<< G4IonTable::GetIonTable()->GetIon(f_targetZ,f_targetA,0)->GetPDGMass() << std::endl;
-	std::cout	<< G4IonTable::GetIonTable()->GetIon(f_ejecZ,f_ejecA,0)->GetPDGMass() << std::endl;
-	std::cout	<< G4IonTable::GetIonTable()->GetIon(f_recoilZ,f_recoilA,0)->GetPDGMass() << std::endl;
-
-
-
-
-	fM[0] 		= G4IonTable::GetIonTable()->GetIon(f_beamZ,f_beamA,0)->GetPDGMass();
-	fM[1]		= G4IonTable::GetIonTable()->GetIon(f_targetZ,f_targetA,0)->GetPDGMass();
-	fM[2]		= G4IonTable::GetIonTable()->GetIon(f_ejecZ,f_ejecA,0)->GetPDGMass();
-	fM[3] 		= G4IonTable::GetIonTable()->GetIon(f_recoilZ,f_recoilA,0)->GetPDGMass() + fEx;
+	fM[0] 		= 19550.5; //G4IonTable::GetIonTable()->GetIon(f_beamZ,f_beamA,0)->GetPDGMass();
+	fM[1]		= 1875.61;//G4IonTable::GetIonTable()->GetIon(f_targetZ,f_targetA,0)->GetPDGMass();
+	fM[2]		= 938.272;//G4IonTable::GetIonTable()->GetIon(f_ejecZ,f_ejecA,0)->GetPDGMass();
+	fM[3] 		= 20479.7;//G4IonTable::GetIonTable()->GetIon(f_recoilZ,f_recoilA,0)->GetPDGMass() + fEx;
+	fM[3]		+= fEx;
 
 	fQVal		= fM[0] + fM[1] - fM[2] - fM[3];
 
@@ -251,38 +331,6 @@ void Kinematics::CalculateKinematics(){
 	fCM_2		= fLab_2;
 	fCM_2.Boost(0,0,-fCmV);
 
-}
-
-CalcVertex Kinematics::CreateVertex(double tCm){
-
-	CalcVertex	vert;
-
-	double	theta_cm	= tCm;
-	if(fM[0] > fM[1])
-		theta_cm	= PI - tCm;
-
-	fCM_3	= TLorentzVector(fPCm[2] * sin(theta_cm), 0, fPCm[2] * cos(theta_cm),fECm[2]);
-	fCM_4	= totalEnergyCM - fCM_3;
-
-	fLab_3	= fCM_3;
-	fLab_3.Boost(0,0,fCmV);
-	fLab_4 	= fCM_4;
-	fLab_4.Boost(0,0,fCmV);
-
-	double	theta_lab = fLab_3.Angle(fLab_1.Vect());
-	if(theta_lab < 0)
-		theta_lab += PI;
-	if(abs(theta_lab) < 1e-6)
-		theta_lab = 0;
-	vert.SetEjecTheta(theta_lab);
-	theta_lab = fLab_4.Angle(fLab_1.Vect());
-	if(abs(theta_lab) < 1e-6)
-		theta_lab = 0;
-	vert.SetRecoilTheta(theta_lab);
-
-	vert.SetEjecKinE(fLab_3.E() - fM[2]);
-	vert.SetRecoilKinE(fLab_4.E() - fM[3]);
-	return vert;
 
 }
 
@@ -294,6 +342,6 @@ double Kinematics::Reconstruct(double energy, double tLab){
 	fLab_3	= TLorentzVector(pLab3 * sin(tLab),0,pLab3 * cos(tLab), E3);
 	fLab_4	= totalEnergyLab - fLab_3;
 
-	return	fLab_4.Mag() - G4IonTable::GetIonTable()->GetIon(f_recoilZ,f_recoilA,0)->GetPDGMass();
+	return	fLab_4.Mag() - 20479.7;
 
 }

@@ -48,7 +48,9 @@ PrimaryGeneratorAction::PrimaryGeneratorAction()
 : G4VUserPrimaryGeneratorAction()
 {
 
-	messenger	=	new PrimaryGeneratorMessenger(this);
+	messenger		= new PrimaryGeneratorMessenger(this);
+
+	fDist			= new AngularDistribution();
 
 	G4int n_particle 	= 1;
 	fParticleSource 	= new G4GeneralParticleSource();
@@ -63,6 +65,8 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction()
 	delete	fParticleSource;
   	delete 	fParticleGun;
 
+	delete	fDist;
+
 	delete	messenger;
 }
 
@@ -75,7 +79,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 
 	if(true){
 
-		fKin = Kinematics(beamA,beamZ,targetA,targetZ,ejectileA,ejectileZ);
+		fKin = Kinematics(beamA,beamZ,targetA,targetZ,ejectileA,ejectileZ,ExcE);
 
 		int	recoilZ	= beamZ + targetZ - ejectileZ;
 		int	recoilA	= beamA + targetA - ejectileA;
@@ -89,7 +93,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 			= particleTable->FindParticle(particleName="proton");
 
 		double	randR	= G4UniformRand() * beamSpotSize;
-		double	randP	= G4UniformRand() * 2 * PI;
+		double	randP	= G4UniformRand() * 2. * PI;
 
 		double	randX	= randR * sin(randP);
 		double	randY	= randR * cos(randP);
@@ -98,19 +102,25 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 		G4PrimaryParticle *g4prim;
 
 		fKin.SetReactionEnergy(incEnergy);
-		fKin.CalculateKinematics(ExcE);
+		//fKin.CalculateKinematics(ExcE);
 
-		double	tCm	= acos(2*G4UniformRand() - 1);
+		if(fDist->GoodDist()){
+			tCm	= fDist->GetDistributionHistogram()->GetRandom() * D2R;
+		}
+		else{
+			tCm	= acos(2*G4UniformRand() - 1.);
+		}
+
 
 		vert = fKin.CreateVertex(tCm);
 
 		double	etLab	= vert.GetEjecTheta();
-		double	epLab	= G4UniformRand() * 2 * PI;
+		double	epLab	= G4UniformRand() * 2. * PI;
 		g4prim = new G4PrimaryParticle();
 		g4prim->SetKineticEnergy(vert.GetEjecKinE() * MeV);
 		g4prim->SetMomentumDirection(G4ThreeVector(sin(etLab)*cos(epLab),sin(etLab)*sin(epLab),cos(etLab)));
 		g4prim->SetG4code(particleTable->FindParticle(particleName="proton"));
-		g4vtx = new G4PrimaryVertex(0.,0.,0.,0.);
+		g4vtx = new G4PrimaryVertex(randX,randY,0.,0.);
 		g4vtx->SetPrimary(g4prim);
 		anEvent->AddPrimaryVertex(g4vtx);	
 
@@ -120,7 +130,7 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 		g4prim->SetKineticEnergy(vert.GetRecoilKinE() * MeV);
 		g4prim->SetMomentumDirection(G4ThreeVector(sin(rtLab)*cos(rpLab),sin(rtLab)*sin(rpLab),cos(rtLab)));
 		g4prim->SetG4code(G4IonTable::GetIonTable()->GetIon(recoilZ,recoilA,ExcE));
-		g4vtx = new G4PrimaryVertex(0.,0.,0.,0.);
+		g4vtx = new G4PrimaryVertex(randX,randY,0.,0.);
 		g4vtx->SetPrimary(g4prim);
 		anEvent->AddPrimaryVertex(g4vtx);
 
@@ -140,3 +150,74 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
+PrimaryGeneratorAction::PrimaryGeneratorAction(const PrimaryGeneratorAction& v){
+
+	messenger = v.messenger;
+
+	fParticleGun	= v.fParticleGun; // pointer a to G4 gun class
+	fParticleSource = v.fParticleSource; // pointer a to G4 gun class
+	fKin 		= v.fKin;
+	vert 		= v.vert;
+
+	rEnergy 	= v.rEnergy;
+	rTheta 		= v.rTheta;
+	rPhi 		= v.rPhi;
+	eEnergy 	= v.eEnergy;
+	eTheta 		= v.eTheta;
+	ePhi 		= v.ePhi;
+
+	beamSpotSize 	= v.beamSpotSize;
+	beamEnergy 	= v.beamEnergy;
+	beamEnergyLoss 	= v.beamEnergyLoss;
+
+	ExcE 		= v.ExcE;
+
+	beamA 		= v.beamA;
+	beamZ 		= v.beamZ;
+	targetA 	= v.targetA;
+	targetZ 	= v.targetZ;
+	ejectileA 	= v.ejectileA;
+	ejectileZ 	= v.ejectileZ;
+
+	bDist 		= v.bDist;
+
+	fDist 		= v.fDist;
+
+}
+PrimaryGeneratorAction& PrimaryGeneratorAction::operator = (const PrimaryGeneratorAction& v){
+	
+
+	messenger = v.messenger;
+
+	fParticleGun	= v.fParticleGun; // pointer a to G4 gun class
+	fParticleSource = v.fParticleSource; // pointer a to G4 gun class
+	fKin 		= v.fKin;
+	vert 		= v.vert;
+
+	rEnergy 	= v.rEnergy;
+	rTheta 		= v.rTheta;
+	rPhi 		= v.rPhi;
+	eEnergy 	= v.eEnergy;
+	eTheta 		= v.eTheta;
+	ePhi 		= v.ePhi;
+
+	beamSpotSize 	= v.beamSpotSize;
+	beamEnergy 	= v.beamEnergy;
+	beamEnergyLoss 	= v.beamEnergyLoss;
+
+	ExcE 		= v.ExcE;
+
+	beamA 		= v.beamA;
+	beamZ 		= v.beamZ;
+	targetA 	= v.targetA;
+	targetZ 	= v.targetZ;
+	ejectileA 	= v.ejectileA;
+	ejectileZ 	= v.ejectileZ;
+
+	bDist 		= v.bDist;
+
+	fDist 		= v.fDist;	
+
+	return *this;
+
+}
